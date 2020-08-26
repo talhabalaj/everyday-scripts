@@ -1,0 +1,123 @@
+#!/bin/bash
+
+# functions
+function exists() {
+	if ! command -v $1 &> /dev/null;
+		then echo 1;
+		else echo 0;
+	fi
+}
+
+function exitIfError() {
+	if [[ $1 -ne 0 ]]; then 
+		echo "[x] Something went wrong processing the less command."
+		exit
+	fi
+}
+
+function alreadyInstalled() {
+	echo "[!] Already installed, skipping";
+}
+
+function installationProgress() {
+	echo "[!] Installing $1";
+}
+
+function installationSuccess() {
+	echo "[!] Installed $1 successfully.";
+}
+
+if [[ $(exists apt) -ne 0 ]]; then
+	echo "[x] Yo, booooi. Only debian based"
+      	exit 1
+fi
+
+if [[ $(exists toilet) -ne 0 ]]; then
+	sudo apt install toilet -y &>/dev/null
+	exitIfError $?
+fi
+
+toilet -f smblock BOOSTRAP LINUX
+
+installationProgress fish
+if [[ $(exists fish) -ne 0 ]];
+then
+	sudo apt install fish -y
+	exitIfError $?
+	installationSuccess
+else
+	alreadyInstalled
+fi
+
+
+installationProgress omf
+if [[ ! -f "$HOME/.config/omf/bundle" ]];
+then
+	wget https://get.oh-my.fish -O /tmp/installomf
+	exitIfError $?
+	chmod +x /tmp/installomf
+	fish -c "/tmp/installomf --noninteractive"
+	rm -rf /tmp/installomf
+else
+	alreadyInstalled
+fi
+
+# Install tmux
+installationProgress tmux
+if [[ $(exists tmux) -ne 0 ]]; then 
+	sudo apt install tmux -y
+	installationSuccess tmux
+	exitIfError $?
+	installationProgress "Oh My Tmux"
+	git clone https://github.com/gpakosz/.tmux
+	exitIfError $?
+	ln -s -f .tmux/.tmux.conf
+	cp .tmux/.tmux.conf.local .
+	installationSuccess "Oh my Tmux"
+	echo "[!] Adding configuration to tmux to use fish shell"
+	echo "set-option -g default-shell $(which fish)" >> ~/.tmux.conf.local
+	exitIfError $?
+	echo "[!] Added Successfully"
+else 
+	alreadyInstalled
+fi
+
+if [ $(grep ^$(id -un): /etc/passwd | cut -d : -f 7-) != $(which tmux) ];
+then
+	echo "[?] Default shell is not tmux, changing.."
+	sudo chsh -s $(which tmux) $USER
+	exitIfError $?
+	echo "[!] Default shell changed to tmux"
+fi
+
+installationProgress nmv
+if [[ ! -d "$HOME/.nvm" ]];
+then
+	fish -c "omf install nvm"
+	exitIfError $?
+	curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash
+	exitIfError $?
+	installationSuccess nvm
+	export NVM_DIR="$HOME/.nvm"
+	[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+else
+	alreadyInstalled
+fi
+
+installationProgress node
+if [[ $(exists node) -ne 0 ]];
+then
+	nvm install node
+	nvm alias default node
+	nvm use default
+	exitIfError $?
+	installationSuccess node
+else
+	alreadyInstalled
+fi
+
+
+
+
+source ~/.bashrc
+echo "[!] Finished"
