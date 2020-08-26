@@ -1,6 +1,4 @@
 #!/bin/bash
-echo "Hi, Master $USER"
-echo "Let me install the things you need."
 
 # functions
 function exists() {
@@ -12,8 +10,8 @@ function exists() {
 
 function exitIfError() {
 	if [[ $1 -ne 0 ]]; then 
-		echo "Error occured" 
-		exit 
+		echo "Error occured"
+		exit
 	fi
 }
 
@@ -26,6 +24,14 @@ if [[ $(exists apt) -ne 0 ]]; then
       	exit 1
 fi
 
+echo "Preparing..."
+if [[ $(exists toilet) -ne 0 ]]; then
+	sudo apt install toilet -y &>/dev/null
+	exitIfError $?
+fi
+
+toilet -f smblock BOOSTRAP LINUX
+
 echo "Starting...."
 echo "Installing fish..."
 if [[ $(exists fish) -ne 0 ]];
@@ -34,6 +40,13 @@ then
 	exitIfError $?
 else
 	alreadyInstalled
+fi
+
+if [ $(grep ^$(id -un): /etc/passwd | cut -d : -f 7-) != $(which fish) ];
+then
+	echo "Default shell is not fish, changing.."
+	sudo chsh -s $(which fish) $USER
+	exitIfError $?
 fi
 
 echo "Installing omf..."
