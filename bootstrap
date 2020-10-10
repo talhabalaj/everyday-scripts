@@ -38,6 +38,7 @@ if [[ $(exists toilet) -ne 0 ]]; then
 fi
 
 toilet -f smblock BOOSTRAP LINUX
+cd ~
 
 installationProgress fish
 if [[ $(exists fish) -ne 0 ]];
@@ -71,6 +72,7 @@ if [[ $(exists tmux) -ne 0 ]]; then
 	installationProgress "Oh My Tmux"
 	git clone https://github.com/gpakosz/.tmux
 	exitIfError $?
+	if [[ -f '.tmux*' ]]; then rm -rf .tmux*; fi
 	ln -s -f .tmux/.tmux.conf
 	cp .tmux/.tmux.conf.local .
 	installationSuccess "Oh my Tmux"
