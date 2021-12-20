@@ -1,0 +1,6 @@
+#!/bin/sh
+BOOT_FILES_DIR=/boot/efi/EFI/Microsoft/Boot
+for file in ${BOOT_FILES_DIR}/*.efi
+do	
+    sudo sbctl sign -s ${file}
+done
