@@ -2,7 +2,6 @@
 
 url=""
 path="~/Music"
-format="%(title)s.mp3"
 
 if [ -z "$1" ]; then
     echo "No url supplied";
@@ -12,9 +11,12 @@ fi
 url="$1"
 
 if [ -z "$2" ]; then
-    echo "using default path";
+    echo "Saving in $path"
 else
     path="$2"
 fi
 
-youtube-dl -f 'bestaudio' $url -o "$path/$format"
+name=$(ytdl "$url" --info | head -n 1 | cut -d":" -f2 | sed -e 's/^[[:space:]]*//')
+cd $path
+ytdl "$url" | ffmpeg -i pipe:0 -b:a 192K -vn "$name.mp3"
+
